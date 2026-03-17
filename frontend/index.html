@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Blockchain-powered NGO donation tracking platform ensuring full transparency and accountability." />
+    <title>NGO Donation Tracker — Transparent Giving on Blockchain</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <script>
+      // Polyfills for Web3 libraries in Vite
+      window.global = window;
+      window.process = { env: {} };
+      window.Buffer = window.Buffer || [];
+      
+      // Basic error logging to track white screen issues
+      window.onerror = function(msg, url, line) {
+        console.error("🚀 App Crash:", msg, "at", url, ":", line);
+        // Show error on screen if it's a white screen
+        setTimeout(() => {
+          const root = document.getElementById('root');
+          if (root && root.innerHTML === "") {
+            root.innerHTML = `<div style="padding: 20px; color: white; background: #800; font-family: sans-serif;">
+              <h2>Frontend Error</h2>
+              <p>${msg}</p>
+              <small>${url}:${line}</small>
+            </div>`;
+          }
+        }, 1000);
+      };
+    </script>
+  </head>
+  <body class="bg-dark-950 text-dark-100 font-sans antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

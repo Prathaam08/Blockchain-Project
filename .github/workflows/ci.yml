@@ -1,0 +1,123 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: "18"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ── Smart Contract Tests ──
+  contracts:
+    name: Smart Contract Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: contracts/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: contracts
+        run: npm ci
+
+      - name: Compile Contracts
+        working-directory: contracts
+        run: npx hardhat compile
+
+      - name: Run Tests
+        working-directory: contracts
+        run: npx hardhat test
+
+      - name: Gas Report
+        working-directory: contracts
+        run: REPORT_GAS=true npx hardhat test
+
+  # ── Backend Tests ──
+  backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: pass
+          POSTGRES_DB: ngotrack_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install Dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+
+      - name: Run Tests
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://user:pass@localhost:5432/ngotrack_test
+          REDIS_URL: redis://localhost:6379/0
+          WEB3_PROVIDER_URL: http://localhost:8545
+          TESTING: "true"
+        run: pytest tests/ -v --tb=short
+
+  # ── Frontend Build ──
+  frontend:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint --if-present
+
+      - name: Build
+        working-directory: frontend
+        env:
+          VITE_API_URL: http://localhost:8000
+          VITE_CHAIN_ID: "31337"
+        run: npm run build
