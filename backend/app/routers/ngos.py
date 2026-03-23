@@ -7,10 +7,12 @@ Registration triggers a blockchain transaction when possible.
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List
 
 from app.database import get_db
 from app.models.ngo import NGO
+from app.models.donation import Donation
 from app.schemas.ngo import NGORegisterRequest, NGOResponse, NGODetailResponse
 from app.services.blockchain import BlockchainService
 
@@ -140,7 +142,15 @@ async def list_ngos(
         resp = NGODetailResponse.model_validate(ngo)
         try:
             resp.on_chain_balance = await blockchain.get_ngo_balance(ngo.wallet_address)
-            resp.total_donations = await blockchain.get_total_donated_to_ngo(ngo.wallet_address)
+            on_chain_total = await blockchain.get_total_donated_to_ngo(ngo.wallet_address)
+            # Fallback to DB total if on-chain is 0 (e.g. after Hardhat restart)
+            if float(on_chain_total) == 0:
+                db_total = db.query(func.sum(Donation.amount_eth)).filter(
+                    func.lower(Donation.ngo_address) == ngo.wallet_address
+                ).scalar() or 0
+                resp.total_donations = str(db_total)
+            else:
+                resp.total_donations = on_chain_total
             resp.is_verified = True
         except Exception:
             pass
@@ -176,7 +186,14 @@ async def list_all_ngos(
         resp = NGODetailResponse.model_validate(ngo)
         try:
             resp.on_chain_balance = await blockchain.get_ngo_balance(ngo.wallet_address)
-            resp.total_donations = await blockchain.get_total_donated_to_ngo(ngo.wallet_address)
+            on_chain_total = await blockchain.get_total_donated_to_ngo(ngo.wallet_address)
+            if float(on_chain_total) == 0:
+                db_total = db.query(func.sum(Donation.amount_eth)).filter(
+                    func.lower(Donation.ngo_address) == ngo.wallet_address
+                ).scalar() or 0
+                resp.total_donations = str(db_total)
+            else:
+                resp.total_donations = on_chain_total
             resp.is_verified = await blockchain.is_ngo_verified(ngo.wallet_address)
         except Exception:
             pass
@@ -214,15 +231,22 @@ async def get_ngo(address: str, db: Session = Depends(get_db)):
             detail="NGO not found",
         )
 
-    # Fetch on-chain data
+    # Fetch on-chain data with DB fallback
     response = NGODetailResponse.model_validate(ngo)
     try:
         blockchain = BlockchainService()
         balance = await blockchain.get_ngo_balance(address)
-        total = await blockchain.get_total_donated_to_ngo(address)
+        on_chain_total = await blockchain.get_total_donated_to_ngo(address)
         is_verified = await blockchain.is_ngo_verified(address)
         response.on_chain_balance = balance
-        response.total_donations = total
+        # Fallback to DB total if on-chain is 0 (e.g. after Hardhat restart)
+        if float(on_chain_total) == 0:
+            db_total = db.query(func.sum(Donation.amount_eth)).filter(
+                    func.lower(Donation.ngo_address) == address.lower()
+                ).scalar() or 0
+            response.total_donations = str(db_total)
+        else:
+            response.total_donations = on_chain_total
         response.is_verified = is_verified
     except Exception as e:
         print(f"⚠️ Failed to fetch on-chain data: {e}")

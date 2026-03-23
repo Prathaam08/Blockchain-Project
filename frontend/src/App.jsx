@@ -117,7 +117,7 @@ export default function App() {
       <footer className="border-t border-dark-700/50 mt-20">
         <div className="max-w-7xl mx-auto px-4 py-8 text-center">
           <p className="text-dark-500 text-sm">
-            © 2024 NGO Donation Tracker. Built with blockchain for full transparency.
+            © 2026 NGO Donation Tracker. Built with blockchain for full transparency.
           </p>
         </div>
       </footer>

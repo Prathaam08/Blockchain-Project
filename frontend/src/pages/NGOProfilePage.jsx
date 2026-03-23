@@ -16,10 +16,18 @@ export default function NGOProfilePage() {
   const { data: donations } = useDonations({ ngoAddress: address });
 
   // Prepare time series data from analytics
-  const timeData = (analytics?.donation_history || []).map((entry) => ({
-    date: entry.month ? new Date(entry.month).toLocaleDateString("en-US", { month: "short", year: "2-digit" }) : "",
-    value: entry.total_eth || 0,
-  }));
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const timeData = (analytics?.donation_history || []).map((entry) => {
+    let label = entry.month || "";
+    // Parse "YYYY-MM-DD" format into "Mar 18" style label
+    if (label && label.includes("-")) {
+      const parts = label.split("-");
+      const monthIdx = parseInt(parts[1], 10) - 1;
+      const day = parts[2] ? parseInt(parts[2], 10) : "";
+      label = day ? `${monthNames[monthIdx] || parts[1]} ${day}` : `${monthNames[monthIdx] || parts[1]} '${parts[0].slice(2)}`;
+    }
+    return { date: label, value: entry.total_eth || 0 };
+  });
 
   if (ngoLoading) {
     return (

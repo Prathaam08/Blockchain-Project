@@ -50,6 +50,8 @@ export function useNGODetail(address) {
       return response.json();
     },
     enabled: !!address,
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -81,6 +83,8 @@ export function useNGOAnalytics(address) {
       return response.json();
     },
     enabled: !!address,
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true,
   });
 }
 

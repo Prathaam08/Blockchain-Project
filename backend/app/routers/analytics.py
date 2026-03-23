@@ -50,10 +50,10 @@ async def get_overview(db: Session = Depends(get_db)):
     # Top NGOs by donations received
     top_ngos_query = (
         db.query(
-            Donation.ngo_address,
+            func.lower(Donation.ngo_address).label("ngo_addr"),
             func.sum(Donation.amount_eth).label("total"),
         )
-        .group_by(Donation.ngo_address)
+        .group_by(func.lower(Donation.ngo_address))
         .order_by(func.sum(Donation.amount_eth).desc())
         .limit(5)
         .all()
@@ -133,7 +133,7 @@ async def get_ngo_analytics(address: str, db: Session = Depends(get_db)):
     # Total received
     total_received = (
         db.query(func.sum(Donation.amount_eth))
-        .filter(Donation.ngo_address == address.lower())
+        .filter(func.lower(Donation.ngo_address) == address.lower())
         .scalar()
         or 0
     )
@@ -141,7 +141,7 @@ async def get_ngo_analytics(address: str, db: Session = Depends(get_db)):
     # Donation count
     donation_count = (
         db.query(Donation)
-        .filter(Donation.ngo_address == address.lower())
+        .filter(func.lower(Donation.ngo_address) == address.lower())
         .count()
     )
 
@@ -152,43 +152,41 @@ async def get_ngo_analytics(address: str, db: Session = Depends(get_db)):
         .count()
     )
 
-    # Monthly donation history (last 12 months) for charts
+    # Daily donation history for charts (grouped by day for better granularity)
     if db.bind.dialect.name == "sqlite":
-        # SQLite uses strftime for date formatting
-        monthly_history = (
+        daily_history = (
             db.query(
-                func.strftime("%Y-%m-01 00:00:00", Donation.timestamp).label("month"),
+                func.strftime("%Y-%m-%d", Donation.timestamp).label("day"),
                 func.sum(Donation.amount_eth).label("total"),
                 func.count(Donation.id).label("count"),
             )
-            .filter(Donation.ngo_address == address.lower())
-            .group_by(func.strftime("%Y-%m-01 00:00:00", Donation.timestamp))
-            .order_by(func.strftime("%Y-%m-01 00:00:00", Donation.timestamp))
-            .limit(12)
+            .filter(func.lower(Donation.ngo_address) == address.lower())
+            .group_by(func.strftime("%Y-%m-%d", Donation.timestamp))
+            .order_by(func.strftime("%Y-%m-%d", Donation.timestamp))
+            .limit(30)
             .all()
         )
     else:
-        # PostgreSQL uses date_trunc
-        monthly_history = (
+        daily_history = (
             db.query(
-                func.date_trunc("month", Donation.timestamp).label("month"),
+                func.date_trunc("day", Donation.timestamp).label("day"),
                 func.sum(Donation.amount_eth).label("total"),
                 func.count(Donation.id).label("count"),
             )
-            .filter(Donation.ngo_address == address.lower())
-            .group_by(func.date_trunc("month", Donation.timestamp))
-            .order_by(func.date_trunc("month", Donation.timestamp))
-            .limit(12)
+            .filter(func.lower(Donation.ngo_address) == address.lower())
+            .group_by(func.date_trunc("day", Donation.timestamp))
+            .order_by(func.date_trunc("day", Donation.timestamp))
+            .limit(30)
             .all()
         )
 
     donation_history = [
         {
-            "month": str(row.month) if row.month else "",
+            "month": str(row.day) if row.day else "",
             "total_eth": float(row.total),
             "count": row.count,
         }
-        for row in monthly_history
+        for row in daily_history
     ]
 
     return NGOAnalyticsResponse(
