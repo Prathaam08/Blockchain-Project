@@ -36,9 +36,16 @@ function CategoryPie({ data = [], title = "Distribution" }) {
             outerRadius={100}
             paddingAngle={4}
             dataKey="value"
+            stroke="#0f172a"
+            strokeWidth={2}
+            activeIndex={-1}
           >
             {data.map((_, index) => (
-              <Cell key={index} fill={COLORS[index % COLORS.length]} />
+              <Cell
+                key={index}
+                fill={COLORS[index % COLORS.length]}
+                style={{ cursor: "pointer", outline: "none" }}
+              />
             ))}
           </Pie>
           <Tooltip
@@ -48,6 +55,8 @@ function CategoryPie({ data = [], title = "Distribution" }) {
               borderRadius: "12px",
               color: "#f1f5f9",
             }}
+            itemStyle={{ color: "#ffffff" }}
+            labelStyle={{ color: "#ffffff" }}
           />
           <Legend
             wrapperStyle={{ color: "#94a3b8", fontSize: "12px" }}

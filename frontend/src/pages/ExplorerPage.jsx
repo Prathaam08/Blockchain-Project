@@ -56,26 +56,7 @@ export default function ExplorerPage() {
         <CategoryPie data={pieData} title="Donation Distribution" />
       </div>
 
-      {/* Filter */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="flex-1">
-          <input
-            type="text"
-            placeholder="Filter by NGO address (0x...)"
-            value={ngoFilter}
-            onChange={(e) => setNgoFilter(e.target.value)}
-            className="input-field"
-          />
-        </div>
-        {ngoFilter && (
-          <button
-            onClick={() => setNgoFilter("")}
-            className="btn-secondary"
-          >
-            Clear Filter
-          </button>
-        )}
-      </div>
+
 
       {/* Donations Table */}
       {isLoading ? (

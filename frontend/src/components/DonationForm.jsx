@@ -10,6 +10,7 @@ import { ethers } from "ethers";
 import { useWeb3 } from "../contexts/Web3Context";
 import { useContracts } from "../hooks/useContracts";
 import { useRecordDonation } from "../hooks/useDonations";
+import { generateReceipt } from "../utils/generateReceipt";
 import TransactionStatus from "./TransactionStatus";
 
 /**
@@ -26,6 +27,7 @@ export default function DonationForm({ ngos = [], preselectedNGO = "" }) {
   const [amount, setAmount] = useState("");
   const [campaignId, setCampaignId] = useState("");
   const [txState, setTxState] = useState({ status: "idle", hash: null, error: null });
+  const [lastDonation, setLastDonation] = useState(null);
 
   /** Handle donation submission */
   const handleDonate = async (e) => {
@@ -84,6 +86,17 @@ export default function DonationForm({ ngos = [], preselectedNGO = "" }) {
         
         setTxState({ status: "confirmed", hash: tx.hash, error: null });
         
+        // Save donation details for receipt before resetting form
+        const selectedNgo = ngos.find((n) => n.wallet_address === ngoAddress);
+        setLastDonation({
+          txHash: tx.hash,
+          donorAddress: account,
+          ngoName: selectedNgo?.name || "Unknown NGO",
+          ngoAddress: ngoAddress,
+          amount: amount,
+          campaignId: campaignId.trim(),
+        });
+        
         // Reset form
         setAmount("");
         setCampaignId("");
@@ -105,6 +118,7 @@ export default function DonationForm({ ngos = [], preselectedNGO = "" }) {
   };
 
   return (
+    <>
     <div className="glass-card p-8">
       <h2 className="text-xl font-bold text-dark-50 mb-6">Make a Donation</h2>
 
@@ -197,5 +211,27 @@ export default function DonationForm({ ngos = [], preselectedNGO = "" }) {
         </div>
       )}
     </div>
+
+    {/* Fixed Floating Receipt Banner — always visible at bottom of screen */}
+    {txState.status === "confirmed" && lastDonation && (
+      <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-gradient-to-r from-emerald-900/95 to-green-900/95 backdrop-blur-lg border-t border-emerald-500/30 shadow-2xl shadow-green-500/10">
+        <div className="max-w-xl mx-auto flex items-center justify-between gap-4">
+          <div className="text-white text-sm">
+            <span className="font-bold">✅ Donation Confirmed!</span>
+            <span className="text-emerald-200 ml-2 hidden sm:inline">
+              {lastDonation.amount} ETH → {lastDonation.ngoName}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => generateReceipt(lastDonation)}
+            className="shrink-0 py-2.5 px-6 rounded-xl font-semibold text-sm bg-white text-emerald-800 hover:bg-emerald-50 transition-all duration-200 shadow-lg flex items-center gap-2"
+          >
+            📄 Download Receipt
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 }
