@@ -38,9 +38,9 @@ export default function Home() {
           </h1>
 
           <p className="text-lg md:text-xl text-dark-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Every donation tracked on the blockchain. Full transparency,
-            milestone-based funding, and verifiable impact — because
-            generosity deserves accountability.
+            Every donation tracked on the blockchain. Verifiable direct transfers, 
+            dedicated campaign tracking, real-time analytics, and instant PDF receipts — 
+            because generosity deserves absolute transparency.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
