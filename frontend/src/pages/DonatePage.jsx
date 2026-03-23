@@ -14,8 +14,17 @@ export default function DonatePage() {
   const { data: history } = useDonorHistory(account);
 
   return (
-    <div className="page-container">
-      <h1 className="text-3xl font-bold text-dark-50 mb-2">Make a Donation</h1>
+    <div className="relative min-h-screen">
+      {/* Fixed Background Image */}
+      <div 
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-luminosity pointer-events-none z-0"
+        style={{ backgroundImage: "url('/hero-bg.png')" }}
+      />
+      {/* Gradient Overlay for Readability */}
+      <div className="fixed inset-0 bg-gradient-to-b from-dark-950/70 to-dark-950 pointer-events-none z-0" />
+
+      <div className="relative z-10 page-container pt-8 pb-16">
+        <h1 className="text-3xl font-bold text-dark-50 mb-2">Make a Donation</h1>
       <p className="text-dark-400 mb-8">
         Select a verified NGO and donate ETH directly through the blockchain.
       </p>
@@ -63,6 +72,7 @@ export default function DonatePage() {
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

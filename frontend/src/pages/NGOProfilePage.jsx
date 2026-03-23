@@ -6,6 +6,7 @@ import { useParams, Link } from "react-router-dom";
 import { useNGODetail, useNGOAnalytics } from "../hooks/useNGOs";
 import { useDonations } from "../hooks/useDonations";
 import DonationTable from "../components/DonationTable";
+import TransactionTimeline from "../components/TransactionTimeline";
 import TimeSeriesChart from "../components/Analytics/TimeSeriesChart";
 import { formatEth, formatNumber, truncateAddress, formatTimestamp } from "../utils/format";
 
@@ -122,8 +123,13 @@ export default function NGOProfilePage() {
         </div>
       )}
 
+      {/* Transaction Timeline */}
+      <div className="mb-8">
+        <TransactionTimeline donations={donations || []} />
+      </div>
+
       {/* Donation History */}
-      <h2 className="section-title">Donation History</h2>
+      <h2 className="section-title">Donation History (Table View)</h2>
       <DonationTable donations={donations || []} showNGO={false} />
     </div>
   );
