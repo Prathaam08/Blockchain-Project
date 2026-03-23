@@ -39,7 +39,6 @@ The platform utilizes a modern 3-Tier Web3 Architecture:
 ### Prerequisites
 - Node.js (v18+)
 - Python 3.12+
-- Docker & Docker Compose (for PostgreSQL/Redis)
 - MetaMask Browser Extension
 
 ### Step 1: Initialize the Infrastructure (Terminal 1)
@@ -58,13 +57,12 @@ npx hardhat run scripts/seed_ngos.js --network localhost
 ```
 
 ### Step 3: Boot the Backend API (Terminal 3)
-*Note: Ensure your PostgreSQL and Redis Docker containers are running.*
+*The backend now uses **SQLite**, so no Docker setup is required!*
 ```bash
 cd backend
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 ### Step 4: Launch the Frontend App (Terminal 4)
@@ -73,6 +71,27 @@ cd frontend
 npm install
 npm run dev
 ```
+
+---
+
+## 💾 Data Persistence & Restoring your Work
+
+In this local development environment, data is stored in two places:
+
+1.  **Backend (SQLite):** Your NGO profiles, names, and descriptions are stored in `backend/ngotrack.db`. This is **permanent**. Stopping the server will NOT delete this.
+2.  **Blockchain (Hardhat):** Smart contract state (balances, verified status) is **temporary**. If you close Terminal 1, the blockchain resets to Block 0.
+
+### 🔄 How to Restore your Data after a Restart
+If you close your terminals and want to see your data again in the frontend:
+1.  Start `npx hardhat node` (Terminal 1).
+2.  Run `npx hardhat run scripts/deploy.js --network localhost` (Terminal 2).
+3.  **Run the Sync Script:** Go to the `backend` folder and run:
+    ```bash
+    python sync_db.py
+    ```
+    *This automatically reconnects your saved SQLite NGOs to the new blockchain network and restores their "Verified" status!*
+
+---
 
 ### ⚙️ MetaMask Network & Account Setup
 

@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     In production, use Alembic migrations instead.
     """
     # Startup: create tables if they don't exist
-    # Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
     yield
     # Shutdown: cleanup if needed
     engine.dispose()

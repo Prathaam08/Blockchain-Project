@@ -8,7 +8,7 @@ import { useWeb3 } from "../contexts/Web3Context";
 import { useContracts } from "../hooks/useContracts";
 import TransactionStatus from "../components/TransactionStatus";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 /** Ethereum address regex */
 const ETH_ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/;

@@ -13,13 +13,14 @@ settings = get_settings()
 
 # Create SQLAlchemy engine
 # Use synchronous engine for simplicity with FastAPI's dependency injection
-engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
-    echo=settings.DEBUG,
-)
+engine_kwargs = {"pool_pre_ping": True, "echo": settings.DEBUG}
+if settings.DATABASE_URL.startswith("sqlite"):
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+else:
+    engine_kwargs["pool_size"] = 10
+    engine_kwargs["max_overflow"] = 20
+
+engine = create_engine(settings.DATABASE_URL, **engine_kwargs)
 
 # Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
